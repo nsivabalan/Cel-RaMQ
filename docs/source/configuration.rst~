@@ -1,0 +1,70 @@
+Configuration
+=============
+
+Celery, like a consumer appliance doesn’t need much to be operated. It has an input and an output, where you must connect the input to a broker and maybe the output to a result backend if so wanted. But if you look closely at the back there’s a lid revealing loads of sliders, dials and buttons: this is the configuration.
+
+The default configuration should be good enough for most uses, but there’s many things to tweak so Celery works just the way you want it to. Reading about the options available is a good idea to get familiar with what can be configured. You can read about the options in the the `Configuration and defaults <http://docs.celeryproject.org/en/latest/configuration.html#configuration>`_ reference.
+
+The configuration can be set on the app directly or by using a dedicated configuration module. As an example you can configure the default serializer used for serializing task payloads by changing the CELERY_TASK_SERIALIZER setting:
+
+celery.conf.CELERY_TASK_SERIALIZER = 'json'
+
+If you are configuring many settings at once you can use update:
+
+celery.conf.update(
+    CELERY_TASK_SERIALIZER='json',
+    CELERY_RESULT_SERIALIZER='json',
+    CELERY_TIMEZONE='Europe/Oslo',
+    CELERY_ENABLE_UTC=True,
+)
+
+For larger projects using a dedicated configuration module is useful, in fact you are discouraged from hard coding periodic task intervals and task routing options, as it is much better to keep this in a centralized location, and especially for libraries it makes it possible for users to control how they want your tasks to behave, you can also imagine your SysAdmin making simple changes to the configuration in the event of system trouble.
+
+You can tell your Celery instance to use a configuration module, by calling the config_from_object() method:
+
+celery.config_from_object('celeryconfig')
+
+This module is often called “celeryconfig”, but you can use any module name.
+
+A module named celeryconfig.py must then be available to load from the current directory or on the Python path, it could look like this:
+
+celeryconfig.py:
+
+BROKER_URL = 'amqp://'
+CELERY_RESULT_BACKEND = 'amqp://'
+
+CELERY_TASK_SERIALIZER = 'json'
+CELERY_RESULT_SERIALIZER = 'json'
+CELERY_TIMEZONE = 'Europe/Oslo'
+CELERY_ENABLE_UTC = True
+
+To verify that your configuration file works properly, and doesn’t contain any syntax errors, you can try to import it:
+
+$ python -m celeryconfig
+
+For a complete reference of configuration options, see `Configuration and defaults <http://docs.celeryproject.org/en/latest/configuration.html#configuration>`_.
+
+To demonstrate the power of configuration files, this how you would route a misbehaving task to a dedicated queue:
+
+celeryconfig.py:
+
+CELERY_ROUTES = {
+    'tasks.add': 'low-priority',
+}
+
+Or instead of routing it you could rate limit the task instead, so that only 10 tasks of this type can be processed in a minute (10/m):
+
+celeryconfig.py:
+
+CELERY_ANNOTATIONS = {
+    'tasks.add': {'rate_limit': '10/m'}
+}
+
+with RabbitMQ as the broker, you can also direct the workers to set a new rate limit for the task at runtime:
+
+$ celery control rate_limit tasks.add 10/m
+worker.example.com: OK
+    new rate limit set successfully
+
+See `Routing Tasks <routing.html>`_ to read more about task routing, and the CELERY_ANNOTATIONS setting for more about annotations, or Monitoring and Management Guide for more about remote control commands, and how to monitor what your workers are doing.
+

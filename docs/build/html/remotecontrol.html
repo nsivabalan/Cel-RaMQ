@@ -1,0 +1,127 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>Remote Control &mdash; Celery-RabbitMQ 1.0 documentation</title>
+    
+    <link rel="stylesheet" href="_static/default.css" type="text/css" />
+    <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+    
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    './',
+        VERSION:     '1.0',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="_static/jquery.js"></script>
+    <script type="text/javascript" src="_static/underscore.js"></script>
+    <script type="text/javascript" src="_static/doctools.js"></script>
+    <script type="text/javascript" src="http://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
+    <link rel="author" title="About these documents" href="about.html" />
+    <link rel="top" title="Celery-RabbitMQ 1.0 documentation" href="index.html" />
+    <link rel="prev" title="Routing" href="routing.html" /> 
+  </head>
+  <body>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="routing.html" title="Routing"
+             accesskey="P">previous</a> |</li>
+        <li><a href="index.html">Celery-RabbitMQ 1.0 documentation</a> &raquo;</li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body">
+            
+  <div class="section" id="remote-control">
+<h1>Remote Control<a class="headerlink" href="#remote-control" title="Permalink to this headline">¶</a></h1>
+<p>If you’re using RabbitMQ (AMQP), Redis or MongoDB as the broker then you can control and inspect the worker at runtime.</p>
+<p>For example you can see what tasks the worker is currently working on:</p>
+<p>$ celery -A proj inspect active</p>
+<p>This is implemented by using broadcast messaging, so all remote control commands are received by every worker in the cluster.</p>
+<p>You can also specify one or more workers to act on the request using the &#8211;destination option, which is a comma separated list of worker host names:</p>
+<p>$ celery -A proj inspect active &#8211;destination=worker1.example.com</p>
+<p>If a destination is not provided then every worker will act and reply to the request.</p>
+<p>The celery inspect command contains commands that does not change anything in the worker, it only replies information and statistics about what is going on inside the worker. For a list of inspect commands you can execute:</p>
+<p>$ celery -A proj inspect &#8211;help</p>
+<p>Then there is the celery control command, which contains commands that actually changes things in the worker at runtime:</p>
+<p>$ celery -A proj control &#8211;help</p>
+<p>For example you can force workers to enable event messages (used for monitoring tasks and workers):</p>
+<p>$ celery -A proj control enable_events</p>
+<p>When events are enabled you can then start the event dumper to see what the workers are doing:</p>
+<p>$ celery -A proj events &#8211;dump</p>
+<p>or you can start the curses interface:</p>
+<p>$ celery -A proj events</p>
+<p>when you’re finished monitoring you can disable events again:</p>
+<p>$ celery -A proj control disable_events</p>
+<p>The celery status command also uses remote control commands and shows a list of online workers in the cluster:</p>
+<p>$ celery -A proj status</p>
+<p>You can read more about the celery command and monitoring in the <a class="reference external" href="http://docs.celeryproject.org/en/latest/userguide/monitoring.html#guide-monitoring">Monitoring Guide</a>.</p>
+</div>
+
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar">
+        <div class="sphinxsidebarwrapper">
+            <p class="logo"><a href="index.html">
+              <img class="logo" src="_static/logo1.png" alt="Logo"/>
+            </a></p>
+  <h4>Previous topic</h4>
+  <p class="topless"><a href="routing.html"
+                        title="previous chapter">Routing</a></p>
+  <h3>This Page</h3>
+  <ul class="this-page-menu">
+    <li><a href="_sources/remotecontrol.txt"
+           rel="nofollow">Show Source</a></li>
+  </ul>
+<div id="searchbox" style="display: none">
+  <h3>Quick search</h3>
+    <form class="search" action="search.html" method="get">
+      <input type="text" name="q" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    <p class="searchtip" style="font-size: 90%">
+    Enter search terms or a module, class or function name.
+    </p>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="routing.html" title="Routing"
+             >previous</a> |</li>
+        <li><a href="index.html">Celery-RabbitMQ 1.0 documentation</a> &raquo;</li> 
+      </ul>
+    </div>
+    <div class="footer">
+        &copy; Copyright 2013, sivabalan.
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.2b1.
+    </div>
+  </body>
+</html>

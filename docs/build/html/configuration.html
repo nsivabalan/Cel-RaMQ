@@ -1,0 +1,163 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>Configuration &mdash; Celery-RabbitMQ 1.0 documentation</title>
+    
+    <link rel="stylesheet" href="_static/default.css" type="text/css" />
+    <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+    
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    './',
+        VERSION:     '1.0',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="_static/jquery.js"></script>
+    <script type="text/javascript" src="_static/underscore.js"></script>
+    <script type="text/javascript" src="_static/doctools.js"></script>
+    <script type="text/javascript" src="http://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
+    <link rel="author" title="About these documents" href="about.html" />
+    <link rel="top" title="Celery-RabbitMQ 1.0 documentation" href="index.html" />
+    <link rel="next" title="The Primitives" href="primitives.html" />
+    <link rel="prev" title="Calling the task" href="callingtasks.html" /> 
+  </head>
+  <body>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="primitives.html" title="The Primitives"
+             accesskey="N">next</a> |</li>
+        <li class="right" >
+          <a href="callingtasks.html" title="Calling the task"
+             accesskey="P">previous</a> |</li>
+        <li><a href="index.html">Celery-RabbitMQ 1.0 documentation</a> &raquo;</li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body">
+            
+  <div class="section" id="configuration">
+<h1>Configuration<a class="headerlink" href="#configuration" title="Permalink to this headline">¶</a></h1>
+<p>Celery, like a consumer appliance doesn’t need much to be operated. It has an input and an output, where you must connect the input to a broker and maybe the output to a result backend if so wanted. But if you look closely at the back there’s a lid revealing loads of sliders, dials and buttons: this is the configuration.</p>
+<p>The default configuration should be good enough for most uses, but there’s many things to tweak so Celery works just the way you want it to. Reading about the options available is a good idea to get familiar with what can be configured. You can read about the options in the the <a class="reference external" href="http://docs.celeryproject.org/en/latest/configuration.html#configuration">Configuration and defaults</a> reference.</p>
+<p>The configuration can be set on the app directly or by using a dedicated configuration module. As an example you can configure the default serializer used for serializing task payloads by changing the CELERY_TASK_SERIALIZER setting:</p>
+<p>celery.conf.CELERY_TASK_SERIALIZER = &#8216;json&#8217;</p>
+<p>If you are configuring many settings at once you can use update:</p>
+<dl class="docutils">
+<dt>celery.conf.update(</dt>
+<dd>CELERY_TASK_SERIALIZER=&#8217;json&#8217;,
+CELERY_RESULT_SERIALIZER=&#8217;json&#8217;,
+CELERY_TIMEZONE=&#8217;Europe/Oslo&#8217;,
+CELERY_ENABLE_UTC=True,</dd>
+</dl>
+<p>)</p>
+<p>For larger projects using a dedicated configuration module is useful, in fact you are discouraged from hard coding periodic task intervals and task routing options, as it is much better to keep this in a centralized location, and especially for libraries it makes it possible for users to control how they want your tasks to behave, you can also imagine your SysAdmin making simple changes to the configuration in the event of system trouble.</p>
+<p>You can tell your Celery instance to use a configuration module, by calling the config_from_object() method:</p>
+<p>celery.config_from_object(&#8216;celeryconfig&#8217;)</p>
+<p>This module is often called “celeryconfig”, but you can use any module name.</p>
+<p>A module named celeryconfig.py must then be available to load from the current directory or on the Python path, it could look like this:</p>
+<p>celeryconfig.py:</p>
+<p>BROKER_URL = &#8216;amqp://&#8217;
+CELERY_RESULT_BACKEND = &#8216;amqp://&#8217;</p>
+<p>CELERY_TASK_SERIALIZER = &#8216;json&#8217;
+CELERY_RESULT_SERIALIZER = &#8216;json&#8217;
+CELERY_TIMEZONE = &#8216;Europe/Oslo&#8217;
+CELERY_ENABLE_UTC = True</p>
+<p>To verify that your configuration file works properly, and doesn’t contain any syntax errors, you can try to import it:</p>
+<p>$ python -m celeryconfig</p>
+<p>For a complete reference of configuration options, see <a class="reference external" href="http://docs.celeryproject.org/en/latest/configuration.html#configuration">Configuration and defaults</a>.</p>
+<p>To demonstrate the power of configuration files, this how you would route a misbehaving task to a dedicated queue:</p>
+<p>celeryconfig.py:</p>
+<dl class="docutils">
+<dt>CELERY_ROUTES = {</dt>
+<dd>&#8216;tasks.add&#8217;: &#8216;low-priority&#8217;,</dd>
+</dl>
+<p>}</p>
+<p>Or instead of routing it you could rate limit the task instead, so that only 10 tasks of this type can be processed in a minute (10/m):</p>
+<p>celeryconfig.py:</p>
+<dl class="docutils">
+<dt>CELERY_ANNOTATIONS = {</dt>
+<dd>&#8216;tasks.add&#8217;: {&#8216;rate_limit&#8217;: &#8216;10/m&#8217;}</dd>
+</dl>
+<p>}</p>
+<p>with RabbitMQ as the broker, you can also direct the workers to set a new rate limit for the task at runtime:</p>
+<p>$ celery control rate_limit tasks.add 10/m
+worker.example.com: OK</p>
+<blockquote>
+<div>new rate limit set successfully</div></blockquote>
+<p>See <a class="reference external" href="routing.html">Routing Tasks</a> to read more about task routing, and the CELERY_ANNOTATIONS setting for more about annotations, or <a class="reference external" href="remotecontrol.html">Remote Control Guide</a> for more about remote control commands, and how to monitor what your workers are doing.</p>
+</div>
+
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar">
+        <div class="sphinxsidebarwrapper">
+            <p class="logo"><a href="index.html">
+              <img class="logo" src="_static/logo1.png" alt="Logo"/>
+            </a></p>
+  <h4>Previous topic</h4>
+  <p class="topless"><a href="callingtasks.html"
+                        title="previous chapter">Calling the task</a></p>
+  <h4>Next topic</h4>
+  <p class="topless"><a href="primitives.html"
+                        title="next chapter">The Primitives</a></p>
+  <h3>This Page</h3>
+  <ul class="this-page-menu">
+    <li><a href="_sources/configuration.txt"
+           rel="nofollow">Show Source</a></li>
+  </ul>
+<div id="searchbox" style="display: none">
+  <h3>Quick search</h3>
+    <form class="search" action="search.html" method="get">
+      <input type="text" name="q" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    <p class="searchtip" style="font-size: 90%">
+    Enter search terms or a module, class or function name.
+    </p>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="primitives.html" title="The Primitives"
+             >next</a> |</li>
+        <li class="right" >
+          <a href="callingtasks.html" title="Calling the task"
+             >previous</a> |</li>
+        <li><a href="index.html">Celery-RabbitMQ 1.0 documentation</a> &raquo;</li> 
+      </ul>
+    </div>
+    <div class="footer">
+        &copy; Copyright 2013, sivabalan.
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.2b1.
+    </div>
+  </body>
+</html>
